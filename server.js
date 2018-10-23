@@ -17,7 +17,8 @@ app.get('/location', (request, response, next) => {
   try {
     const locationData = searchToLatLong(request.query.data);
     response.send(locationData);
-  } catch {
+  }
+  catch (exception) {
     console.log(new Error());
   }
 });
@@ -51,7 +52,7 @@ function searchWeather(location){
     const weather = new Weather(daysData.summary, daysData.time);
     dailyWeatherArr.push(weather);
   })
-  
+
   return dailyWeatherArr;
 }
 
@@ -65,7 +66,7 @@ function convertUnixTime(unixTime) {
   let dayOfWeek = dayOfWeekArr[date.getDay()];
 
   return dayOfWeek + ' ' + month + ' ' + dayOfMonth + ' ' + year;
-} 
+}
 
 function Weather(summary, time) {
   this.forecast = summary;
