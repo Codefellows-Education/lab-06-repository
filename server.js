@@ -13,8 +13,17 @@ app.use(cors());
 
 app.listen(PORT, () => console.log(`App is up on $ PORT`));
 
+let responseData = [];
+
 app.get('/location', (request, response) => {
   const locationData = searchToLatLong(request.query.data);
+  response.send(locationData);
+})
+
+app.get('/weather', (request, response)=>{
+  const locationData = searchToLatLong(request.query.data);
+  const weatherData = searchWeather(locationData);
+  response.send(weatherData);
 })
 
 function searchToLatLong(query) {
@@ -29,3 +38,48 @@ function Location(data) {
   this.latitude = data.geometry.location.lat;
   this.longitude = data.geometry.location.lng;
 }
+
+/////weather
+
+function searchWeather(location){
+  const darkData = require('./data/darksky.json');
+  const dailyWeatherArr = [];
+
+  darkData.daily.data.forEach(daysData => {
+    const weather = new Weather(daysData.summary, daysData.time);
+    dailyWeatherArr.push(weather);
+  })
+  
+  return dailyWeatherArr;
+}
+
+function convertUnixTime(unixTime) {
+  let monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+  let dayOfWeekArr = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
+  let date = new Date(unixTime*1000);
+  let month = monthName[date.getMonth()];
+  let year = date.getFullYear();
+  let dayOfMonth = date.getDate();
+  let dayOfWeek = dayOfWeekArr[date.getDay()];
+
+  return dayOfWeek + ' ' + month + ' ' + dayOfMonth + ' ' + year;
+} 
+
+function Weather(summary, time) {
+  this.forecast = summary;
+  this.time = convertUnixTime(time);
+}
+
+
+
+// [
+//   {
+//     "forecast": "Partly cloudy until afternoon.",
+//     "time": "Mon Jan 01 2001"
+//   },
+//   {
+//     "forecast": "Mostly cloudy in the morning.",
+//     "time": "Tue Jan 02 2001"
+//   },
+//   ...
+// ]
