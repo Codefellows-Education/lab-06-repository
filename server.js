@@ -13,12 +13,14 @@ app.use(cors());
 
 app.listen(PORT, () => console.log(`App is up on $ PORT`));
 
-let responseData = [];
-
-app.get('/location', (request, response) => {
-  const locationData = searchToLatLong(request.query.data);
-  response.send(locationData);
-})
+app.get('/location', (request, response, next) => {
+  try {
+    const locationData = searchToLatLong(request.query.data);
+    response.send(locationData);
+  } catch {
+    console.log(new Error());
+  }
+});
 
 app.get('/weather', (request, response)=>{
   const locationData = searchToLatLong(request.query.data);
@@ -70,16 +72,15 @@ function Weather(summary, time) {
   this.time = convertUnixTime(time);
 }
 
+//////////errors
+function Error() {
+  this.status = 500;
+  this.respoonseText = 'Sorry, something went wrong';
+}
 
 
-// [
-//   {
-//     "forecast": "Partly cloudy until afternoon.",
-//     "time": "Mon Jan 01 2001"
-//   },
-//   {
-//     "forecast": "Mostly cloudy in the morning.",
-//     "time": "Tue Jan 02 2001"
-//   },
+// {
+//   status: 500,
+//   responseText: "Sorry, something went wrong",
 //   ...
-// ]
+// }
