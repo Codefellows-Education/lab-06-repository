@@ -11,9 +11,10 @@ const app = express();
 
 app.use(cors());
 
-app.listen(PORT, () => console.log(`App is up on $ PORT`));
+app.listen(PORT, () => console.log(`App is up on http://localhost:${PORT}`));
 
-app.get('/location', (request, response, next) => {
+app.get('/location', (request, response) => {
+  console.log('GET /location', request.query.data);
   try {
     const locationData = searchToLatLong(request.query.data);
     response.send(locationData);
@@ -29,11 +30,19 @@ app.get('/weather', (request, response)=>{
   response.send(weatherData);
 })
 
+
 function searchToLatLong(query) {
-  const geoData = require('./data/geo.json');
-  const location = new Location(geoData.results[0]);
-  location.search_query = query;
-  return location;
+  const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${process.env.GEOCODE_API_KEY}`;
+  console.log('gettog',URL);
+
+  return superagent.get(URL)
+    .then( data => {
+      if (! data.body.results.length) { throw 'No Data';}
+
+      let location = new Location(data.body.results[0]);
+      loation.search_query = query;
+      return location;
+    })
 }
 
 function Location(data) {
@@ -56,21 +65,9 @@ function searchWeather(location){
   return dailyWeatherArr;
 }
 
-function convertUnixTime(unixTime) {
-  let monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-  let dayOfWeekArr = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat'];
-  let date = new Date(unixTime*1000);
-  let month = monthName[date.getMonth()];
-  let year = date.getFullYear();
-  let dayOfMonth = date.getDate();
-  let dayOfWeek = dayOfWeekArr[date.getDay()];
-
-  return dayOfWeek + ' ' + month + ' ' + dayOfMonth + ' ' + year;
-}
-
-function Weather(summary, time) {
-  this.forecast = summary;
-  this.time = convertUnixTime(time);
+function Weather (day) {
+  this.forecast = day.summary;
+  this.time = new Date(day.time * 1000).toString().slice(0.15);
 }
 
 //////////errors
